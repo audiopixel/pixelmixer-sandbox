@@ -89,12 +89,10 @@
 			}
 
 
-			var quality = 2, quality_levels = [ 0.5, 1, 2, 4, 8 ];
-			var toolbar, compileButton, fullscreenButton, compileTimer, errorLines = [];
-			var code, panButton,
-			parameters = { startTime: Date.now(), time: 0, mouseX: 0.5, mouseY: 0.5, screenWidth: 0, screenHeight: 0 },
+			var toolbar, compileButton, compileTimer, errorLines = [];
+			var parameters = { startTime: Date.now(), time: 0, mouseX: 0.5, mouseY: 0.5, screenWidth: 0, screenHeight: 0 },
 			surface = { centerX: 0, centerY: 0, width: 1, height: 1, isPanning: false, isZooming: false, lastX: 0, lastY: 0 },
-			frontTarget, backTarget, screenProgram, getWebGL, resizer = {}, compileOnChangeCode = true;
+			code, resizer = {}, compileOnChangeCode = true;
 
 			init();
 
@@ -109,35 +107,6 @@
 				var rightside = document.createElement( 'div' );
 				rightside.style.cssFloat = 'right';
 				toolbar.appendChild( rightside );
-
-				panButton = document.createElement( 'button' );
-				panButton.textContent = 'pan/zoom';
-				panButton.style.cursor = 'move';
-				panButton.style.display = 'none';
-				panButton.title = "Pan: left-drag, Zoom: right-drag. Use 'hide code' for a large pan/zoom area.";
-				rightside.appendChild( panButton );
-
-				fullscreenButton = document.createElement( 'button' );
-				fullscreenButton.textContent = 'fullscreen';
-				fullscreenButton.title = 'Press F11 to enter or leave fullscreen mode';
-				fullscreenButton.addEventListener( 'click', function ( event ) {
-
-					if (document.body.requestFullScreen) {
-						document.body.requestFullScreen();
-					} else if (document.body.mozRequestFullScreen) {
-						document.body.mozRequestFullScreen();
-					} else if (document.body.webkitRequestFullScreen) {
-						document.body.webkitRequestFullScreen( Element.ALLOW_KEYBOARD_INPUT );
-					}
-
-				}, false );
-
-				rightside.appendChild( fullscreenButton );
-
-				var button = document.createElement( 'a' );
-				button.textContent = 'gallery';
-				button.href = 'http://glsl.heroku.com/';
-				rightside.appendChild( button );
 
 				var button = document.createElement( 'button' );
 				button.textContent = 'hide code';
@@ -165,25 +134,6 @@
 				}, false );
 				toolbar.appendChild( button );
 
-				var select = document.createElement( 'select' );
-
-				for ( var i = 0; i < quality_levels.length; i ++ ) {
-
-					var option = document.createElement( 'option' );
-					option.textContent = quality_levels[ i ];
-					if ( quality_levels[ i ] == quality ) option.selected = true;
-					select.appendChild( option );
-
-				}
-
-				select.addEventListener( 'change', function ( event ) {
-
-					quality = quality_levels[ event.target.selectedIndex ];
-					onWindowResize();
-
-				}, false );
-
-				toolbar.appendChild( select );
 
 				compileButton = document.createElement( 'button' );
 				compileButton.textContent = 'compile';
@@ -295,7 +245,6 @@
 				function settleDown ( event ) {
 					resizer.isResizing = surface.isPanning = surface.isZooming = false;
 					document.body.style.cursor = 'default';
-					panButton.style.cursor = 'move';
 				}
 
 				function mouseLeave(event) {
@@ -391,7 +340,11 @@
 
 			function codeChange() {
 
-				compile();
+				if(compileOnChangeCode){
+
+					compile();
+
+				}
 
 			}
 
