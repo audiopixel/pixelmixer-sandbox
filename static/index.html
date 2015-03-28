@@ -51,22 +51,13 @@
 			}
 
 		</style>
-	</head>
-	<body>
-
-		<link rel="stylesheet" href="css/codemirror.css">
-		<link rel="stylesheet" href="css/default.css">
-
-		<script src="js/lzma.js"></script>
-		<script src='js/helpers.js'></script>
-		<script src="js/codemirror.js"></script>
-		<script src="js/glsl.js"></script>
 
 
 		<!-- Import standard three.js stuff -->
 		<script src="js/Detector.js"></script>
 		<script src="js/three.min.js"></script>
 		<script src="js/TrackballControls.js"></script>
+		<script src="js/pixelmixer.min.js"></script>
 
 		<!-- Shader imported inline: -->
 		<script type="x-shader/x-fragment" id="fs">
@@ -86,10 +77,95 @@
 
 		</script>
 
-
 		<script>
 
-			if ( !Detector.webgl ) { Detector.addGetWebGLMessage(); }
+			if ( !Detector.webgl ) { Detector.addGetWebGLMessage(); } else {
+
+				var glWidth = window.innerWidth;
+				var glHeight = window.innerHeight;
+
+				var scene;
+				var renderer;
+				var camera;
+				var controls;
+				var container;
+
+				function onLoad(){
+
+
+					// ** Standard Three.js setup
+
+					scene = new THREE.Scene();
+
+					renderer = new THREE.WebGLRenderer(); 
+					renderer.setSize( glWidth, glHeight );
+					renderer.autoClear = false;
+
+					container = document.getElementById( 'container' );
+					container.appendChild( renderer.domElement ); 
+
+
+					camera = new THREE.PerspectiveCamera( 30, glWidth / glHeight, 1, 100000 );
+					camera.position.z = 2000;
+					controls = new THREE.TrackballControls( camera, renderer.domElement);
+
+
+
+					// ** Initialize API
+
+					PX.init(scene, renderer);
+					PX.setSize(glWidth, glHeight);
+
+
+
+					// ** Add a simple grid of Nodes 
+
+					var x = -470;		// Position coordinates for the entire grid
+					var y = 120;
+					var z = -0;
+					var width = 52;		// How many pixels for the entire grid
+					var height = 20;
+					var pitch = 33;		// How far each pixel is spaced
+
+					PX.hardware.addSimpleNodeGrid(x, y, z, width, height, pitch);
+					PX.updateNodePoints();
+
+
+
+					// ** Import shader from inline and add to Channel 1
+
+					var fragmentShader = document.getElementById( 'fs' ).textContent;
+					PX.importShader("ImportShader", fragmentShader);
+
+					PX.simpleSetup({channel: 1, ids: ["ImportShader"]});
+
+
+
+					// ** Start the main loop
+
+					animate();
+
+
+				}
+
+			}
+
+		</script>
+
+
+	</head>
+	<body onload="onLoad()">
+
+		<link rel="stylesheet" href="css/codemirror.css">
+		<link rel="stylesheet" href="css/default.css">
+
+		<script src="js/lzma.js"></script>
+		<script src='js/helpers.js'></script>
+		<script src="js/codemirror.js"></script>
+		<script src="js/glsl.js"></script>
+
+
+		<script>
 
 			initialize_helper();
 
@@ -187,6 +263,7 @@
 						if (compileOnChangeCode) {
 							clearTimeout(compileTimer);
 							compileTimer = setTimeout(codeChange, 500);
+							console.log("change");
 						}
 					}
 				});
@@ -359,6 +436,20 @@
 				code.getWrapperElement().style.width = resizer.currentWidth + 'px';
 				code.getWrapperElement().style.height = resizer.currentHeight + 'px';
 
+
+
+				// Resize logic
+				glWidth = window.innerWidth;
+				glHeight = window.innerHeight;
+
+				if(PX.ready){
+					PX.setSize(glWidth, glHeight);
+
+					camera.aspect = glWidth / glHeight;
+					camera.updateProjectionMatrix();
+					controls.handleResize();
+				}
+
 			}
 
 			//
@@ -385,18 +476,27 @@
 
 			function animate() {
 
+				// Main update loop
+				if(PX.ready){
+
+					// Update the API
+					PX.update();
+
+					// Update Three.js
+					controls.update();
+					renderer.render( scene, camera );
+
+				}
+
+				// Keep repeating the animation loop
 				requestAnimationFrame( animate );
-				render();
-
 			}
 
-			function render() {
-
-				
-
-			}
 
 		</script>
 
+		<div id="container"></div>
+
 	</body>
+
 </html>
