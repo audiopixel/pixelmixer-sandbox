@@ -27,9 +27,6 @@ function load_url_code() {
 
 		}
 
-	} else {
-
-
 	}
 }
 
